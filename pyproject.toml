@@ -13,7 +13,7 @@ cpu = [
   "torch>=2.11.0",
   "torchaudio>=2.11.0",
 ]
-cu124 = [
+cu126 = [
   "torch>=2.11.0",
   "torchaudio>=2.11.0",
 ]
@@ -26,7 +26,7 @@ cu130 = [
 conflicts = [
   [
     { extra = "cpu" },
-    { extra = "cu124" },
+    { extra = "cu126" },
     { extra = "cu130" },
   ],
 ]
@@ -34,12 +34,12 @@ conflicts = [
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cpu", extra = "cpu" },
-  { index = "pytorch-cu130", extra = "cu124" },
+  { index = "pytorch-cu130", extra = "cu126" },
   { index = "pytorch-cu130", extra = "cu130" },
 ]
 torchaudio = [
   { index = "pytorch-cpu", extra = "cpu" },
-  { index = "pytorch-cu130", extra = "cu124" },
+  { index = "pytorch-cu130", extra = "cu126" },
   { index = "pytorch-cu130", extra = "cu130" },
 ]
 
@@ -49,8 +49,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu124"
-url = "https://download.pytorch.org/whl/cu124"
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [[tool.uv.index]]
