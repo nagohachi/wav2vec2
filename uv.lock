@@ -2,13 +2,15 @@ version = 1
 revision = 2
 requires-python = ">=3.13"
 resolution-markers = [
-    "extra != 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130'",
-    "sys_platform != 'darwin' and extra == 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu130'",
-    "sys_platform == 'darwin' and extra == 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu130'",
-    "extra != 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu130'",
+    "extra != 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu124' and extra == 'extra-8-wav2vec2-cu130'",
+    "extra != 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu124' and extra != 'extra-8-wav2vec2-cu130'",
+    "sys_platform != 'darwin' and extra == 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu124' and extra != 'extra-8-wav2vec2-cu130'",
+    "sys_platform == 'darwin' and extra == 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu124' and extra != 'extra-8-wav2vec2-cu130'",
+    "extra != 'extra-8-wav2vec2-cpu' and extra != 'extra-8-wav2vec2-cu124' and extra != 'extra-8-wav2vec2-cu130'",
 ]
 conflicts = [[
     { package = "wav2vec2", extra = "cpu" },
+    { package = "wav2vec2", extra = "cu124" },
     { package = "wav2vec2", extra = "cu130" },
 ]]
 
@@ -454,7 +456,7 @@ version = "2.14.0+cu130"
 source = { registry = "https://download.pytorch.org/whl/cu130" }
 dependencies = [
     { name = "cuda-bindings", marker = "python_full_version < '3.15' and sys_platform == 'linux'" },
-    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130')" },
+    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra == 'extra-8-wav2vec2-cu124') or (sys_platform == 'linux' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu124') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cu124' and extra == 'extra-8-wav2vec2-cu130')" },
     { name = "filelock" },
     { name = "fsspec" },
     { name = "jinja2" },
@@ -573,10 +575,14 @@ dependencies = [
 
 [package.optional-dependencies]
 cpu = [
-    { name = "torch", version = "2.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130')" },
-    { name = "torch", version = "2.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130')" },
-    { name = "torchaudio", version = "2.11.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130')" },
-    { name = "torchaudio", version = "2.11.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130')" },
+    { name = "torch", version = "2.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu124') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cu124' and extra == 'extra-8-wav2vec2-cu130')" },
+    { name = "torch", version = "2.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu124') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cu124' and extra == 'extra-8-wav2vec2-cu130')" },
+    { name = "torchaudio", version = "2.11.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu124') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cu124' and extra == 'extra-8-wav2vec2-cu130')" },
+    { name = "torchaudio", version = "2.11.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-wav2vec2-cpu') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu124') or (extra == 'extra-8-wav2vec2-cpu' and extra == 'extra-8-wav2vec2-cu130') or (extra == 'extra-8-wav2vec2-cu124' and extra == 'extra-8-wav2vec2-cu130')" },
+]
+cu124 = [
+    { name = "torch", version = "2.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
+    { name = "torchaudio", version = "2.11.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
 ]
 cu130 = [
     { name = "torch", version = "2.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
@@ -587,8 +593,10 @@ cu130 = [
 requires-dist = [
     { name = "einops", specifier = ">=0.8.2" },
     { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "wav2vec2", extra = "cpu" } },
+    { name = "torch", marker = "extra == 'cu124'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "wav2vec2", extra = "cu124" } },
     { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "wav2vec2", extra = "cu130" } },
     { name = "torchaudio", marker = "extra == 'cpu'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "wav2vec2", extra = "cpu" } },
+    { name = "torchaudio", marker = "extra == 'cu124'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "wav2vec2", extra = "cu124" } },
     { name = "torchaudio", marker = "extra == 'cu130'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "wav2vec2", extra = "cu130" } },
 ]
-provides-extras = ["cpu", "cu130"]
+provides-extras = ["cpu", "cu124", "cu130"]
