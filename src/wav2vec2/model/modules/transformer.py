@@ -48,7 +48,9 @@ class Wav2Vec2Transformer(nn.Module):
     def _lens_to_mask(xlens: torch.Tensor, max_len: int) -> torch.Tensor:
         """converts xlens of (batch_size, ) to pytorch-style src-key-padding mask."""
         positions = torch.arange(max_len, device=xlens.device)
-        return positions[None, :] >= xlens[:, None]
+        positions_2d = rearrange(positions, "s -> 1 s")
+        xlens_2d = rearrange(xlens, "b -> b 1")
+        return positions_2d >= xlens_2d
 
     def forward(
         self, x: torch.Tensor, xlens: torch.Tensor
