@@ -66,6 +66,7 @@ class Wav2Vec2(nn.Module):
 
 class Wav2Vec2ForCTC(nn.Module):
     def __init__(self, config: Wav2Vec2Config, vocab_size: int) -> None:
+        super().__init__()
         self.wav2vec2 = Wav2Vec2(config)
         self.ctc_head = nn.Linear(config.transformer_config.hidden_dim, vocab_size)
 
