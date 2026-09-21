@@ -62,3 +62,17 @@ class Wav2Vec2(nn.Module):
         )
 
         return transformer_output, transformer_output_lens, feature_encoder_output
+
+
+class Wav2Vec2ForCTC(nn.Module):
+    def __init__(self, config: Wav2Vec2Config, vocab_size: int) -> None:
+        self.wav2vec2 = Wav2Vec2(config)
+        self.ctc_head = nn.Linear(config.transformer_config.hidden_dim, vocab_size)
+
+    def forward(
+        self, x: torch.Tensor, xlens: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        transformer_output, transformer_output_lens, _ = self.wav2vec2(x, xlens)
+        ctc_logits = self.ctc_head(transformer_output)
+
+        return ctc_logits, transformer_output_lens
