@@ -15,11 +15,13 @@ def sl(cfg: TrainConfig) -> None:
         batch_size=cfg.data.batch_size,
         num_workers=cfg.data.num_workers,
     )
-    module = Wav2Vec2CTCModule(config=cfg.model, lr=cfg.optim.lr)
+    module = Wav2Vec2CTCModule(
+        model_config=cfg.model, finetune_config=cfg.finetune
+    )
     Trainer(**cfg.trainer).fit(module, datamodule)
 
 
-def ssl(cfg: TrainConfig) -> None:
+def ssl(_cfg: TrainConfig) -> None:
     raise NotImplementedError("SSL training is not implemented yet")
 
 

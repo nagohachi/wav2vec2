@@ -17,15 +17,27 @@ class DataConfig:
 
 
 @dataclass
-class OptimConfig:
-    lr: float = 3e-4
+class FinetuneConfig:
+    learning_rate: float = 3e-5
+    adam_betas: tuple[float, float] = (0.9, 0.98)
+    adam_eps: float = 1e-8
+    weight_decay: float = 0.0
+    max_steps: int = 80000
+    warmup_ratio: float = 0.1
+    hold_ratio: float = 0.4
+    freeze_feature_encoder: bool = True
+    freeze_transformer_steps: int = 10000
+    time_mask_prob: float = 0.65
+    time_mask_length: int = 10
+    channel_mask_prob: float = 0.5
+    channel_mask_length: int = 64
 
 
 @dataclass
 class TrainConfig:
     data: DataConfig
     model: Wav2Vec2Config = field(default_factory=Wav2Vec2Config)
-    optim: OptimConfig = field(default_factory=OptimConfig)
+    finetune: FinetuneConfig = field(default_factory=FinetuneConfig)
     trainer: dict[str, Any] = field(default_factory=dict)
 
 
