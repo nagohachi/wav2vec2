@@ -1,7 +1,7 @@
 data:
   data_root: data
   train_split: train-960
-  batch_size: 8
+  batch_seconds: 267.0
   num_workers: 4
 
 model:
@@ -28,5 +28,6 @@ trainer:
   devices: 6
   strategy: ddp
   precision: bf16-mixed
+  use_distributed_sampler: false
   val_check_interval: 1000
   gradient_clip_val: 1.0

@@ -12,7 +12,7 @@ from .model.schemas import Wav2Vec2Config
 class DataConfig:
     data_root: Path
     train_split: Literal["train-clean-100", "train-960"] = "train-clean-100"
-    batch_size: int = 8
+    batch_seconds: float = 200.0
     num_workers: int = 4
 
 
