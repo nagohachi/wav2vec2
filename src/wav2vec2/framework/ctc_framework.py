@@ -6,6 +6,7 @@ from torch import nn
 
 from ..config import FinetuneConfig
 from ..data.dataset import LibriSpeechBatch, LibriSpeechDataset
+from ..data.sampler import DynamicBatchSampler
 from ..model.modules.spec_augment import SpecAugment
 from ..model.schemas import Wav2Vec2Config
 from ..model.wav2vec2 import Wav2Vec2ForCTC
@@ -48,6 +49,11 @@ class Wav2Vec2CTCModule(LightningModule):
     def on_train_start(self) -> None:
         thawed = self.global_step >= self.finetune_config.freeze_transformer_steps
         self._set_transformer_trainable(thawed)
+
+    def on_train_epoch_start(self) -> None:
+        batch_sampler = getattr(self.trainer.train_dataloader, "batch_sampler", None)
+        if isinstance(batch_sampler, DynamicBatchSampler):
+            batch_sampler.set_epoch(self.current_epoch)
 
     def on_train_batch_start(self, batch: LibriSpeechBatch, batch_idx: int) -> None:
         if self.global_step == self.finetune_config.freeze_transformer_steps:

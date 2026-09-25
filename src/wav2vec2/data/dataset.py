@@ -1,4 +1,6 @@
+import json
 import string
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -63,6 +65,23 @@ class LibriSpeechDataset(Dataset):
                     self._utterance_ids.append(utterance_id)
                     self._flac_paths.append(chapter_dir / f"{utterance_id}.flac")
                     self._transcripts.append(transcript)
+
+        cache_path = data_root / "LibriSpeech" / f"frame_lengths.{split}.json"
+        self.frame_lengths = self._load_or_build_frame_lengths(cache_path)
+
+    def _load_or_build_frame_lengths(self, cache_path: Path) -> list[int]:
+        if cache_path.exists():
+            cached = json.loads(cache_path.read_text())
+            if all(uid in cached for uid in self._utterance_ids):
+                return [cached[uid] for uid in self._utterance_ids]
+
+        with ThreadPoolExecutor() as executor:
+            frame_lengths = list(
+                executor.map(lambda p: soundfile.info(p).frames, self._flac_paths)
+            )
+
+        cache_path.write_text(json.dumps(dict(zip(self._utterance_ids, frame_lengths))))
+        return frame_lengths
 
     def __len__(self) -> int:
         return len(self._flac_paths)

@@ -12,7 +12,7 @@ def sl(cfg: TrainConfig) -> None:
     datamodule = LibriSpeechDataModule(
         data_root=cfg.data.data_root,
         train_split=cfg.data.train_split,
-        batch_size=cfg.data.batch_size,
+        batch_seconds=cfg.data.batch_seconds,
         num_workers=cfg.data.num_workers,
     )
     module = Wav2Vec2CTCModule(
