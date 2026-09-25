@@ -1,0 +1,32 @@
+data:
+  data_root: data
+  train_split: train-960
+  batch_size: 8
+  num_workers: 4
+
+model:
+  transformer_config:
+    num_layers: 12
+
+finetune:
+  learning_rate: 1.0e-4
+  adam_betas: [0.9, 0.98]
+  weight_decay: 0.0
+  max_steps: 320000
+  warmup_ratio: 0.1
+  hold_ratio: 0.4
+  freeze_feature_encoder: false
+  freeze_transformer_steps: 0
+  time_mask_prob: 0.65
+  time_mask_length: 10
+  channel_mask_prob: 0.5
+  channel_mask_length: 64
+
+trainer:
+  max_steps: 320000
+  accelerator: gpu
+  devices: 6
+  strategy: ddp
+  precision: bf16-mixed
+  val_check_interval: 1000
+  gradient_clip_val: 1.0
