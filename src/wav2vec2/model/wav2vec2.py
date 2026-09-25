@@ -4,6 +4,7 @@ from torch import nn
 
 from .modules.adapter import Wav2Vec2Adapter
 from .modules.cnn import Wav2Vec2FeatureEncoder
+from .modules.spec_augment import SpecAugment
 from .modules.transformer import Wav2Vec2Transformer
 from .schemas import Wav2Vec2Config
 
@@ -28,6 +29,7 @@ class Wav2Vec2(nn.Module):
         x: torch.Tensor,
         xlens: torch.Tensor,
         time_mask: torch.Tensor | None = None,
+        channel_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """forward path of wav2vec2 encoder. return feature encoder output for self-supervised learning.
 
@@ -35,7 +37,9 @@ class Wav2Vec2(nn.Module):
             x (torch.Tensor): input tensor of (batch_size, seq_len)
             xlens (torch.Tensor): lengths of input tensor of (batch_size, )
             time_mask (torch.Tensor): mask for feature encoder output of (batch_size, seq_len').
-                None during fine-tuning or inference
+                None during inference
+            channel_mask (torch.Tensor): mask over channels of (batch_size, cnn_hidden_size).
+                None during inference
 
         Returns:
             tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -53,6 +57,11 @@ class Wav2Vec2(nn.Module):
             feature_encoder_output_maybe_masked = torch.where(
                 time_mask_3d, self.mask_emb, feature_encoder_output_maybe_masked
             )
+        if channel_mask is not None:
+            channel_mask_3d = rearrange(channel_mask, "b c -> b 1 c")
+            feature_encoder_output_maybe_masked = (
+                feature_encoder_output_maybe_masked.masked_fill(channel_mask_3d, 0.0)
+            )
 
         adapter_output, adapter_output_lens = self.adapter(
             feature_encoder_output_maybe_masked, feature_encoder_output_lens
@@ -65,15 +74,33 @@ class Wav2Vec2(nn.Module):
 
 
 class Wav2Vec2ForCTC(nn.Module):
-    def __init__(self, config: Wav2Vec2Config, vocab_size: int) -> None:
+    def __init__(
+        self,
+        config: Wav2Vec2Config,
+        vocab_size: int,
+        spec_augment: SpecAugment | None = None,
+    ) -> None:
         super().__init__()
         self.wav2vec2 = Wav2Vec2(config)
         self.ctc_head = nn.Linear(config.transformer_config.hidden_dim, vocab_size)
+        self.spec_augment = spec_augment
 
     def forward(
         self, x: torch.Tensor, xlens: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        transformer_output, transformer_output_lens, _ = self.wav2vec2(x, xlens)
+        time_mask = None
+        channel_mask = None
+        if self.training and self.spec_augment is not None:
+            feature_encoder = self.wav2vec2.feature_encoder
+            feature_lens = feature_encoder._calc_output_len(xlens)
+            num_channels = feature_encoder.config.out_channels[-1]
+            time_mask, channel_mask = self.spec_augment(
+                feature_lens, int(feature_lens.max()), num_channels, x.device
+            )
+
+        transformer_output, transformer_output_lens, _ = self.wav2vec2(
+            x, xlens, time_mask, channel_mask
+        )
         ctc_logits = self.ctc_head(transformer_output)
 
         return ctc_logits, transformer_output_lens
