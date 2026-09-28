@@ -24,6 +24,17 @@ class Wav2Vec2(nn.Module):
             torch.empty(config.feature_encoder_config.out_channels[-1]).uniform_()
         )
 
+    def calc_feature_encoder_output(
+        self, x: torch.Tensor, xlens: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        feature_encoder_output, feature_encoder_output_lens = self.feature_encoder(
+            x, xlens
+        )
+
+        feature_encoder_output = self.dropout_after_feature_enc(feature_encoder_output)
+
+        return feature_encoder_output, feature_encoder_output_lens
+
     def forward(
         self,
         x: torch.Tensor,
@@ -45,13 +56,10 @@ class Wav2Vec2(nn.Module):
             tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
             transformer output, length, feature encoder output for the quantizer (batch_size, seq_len', cnn_hidden_size)
         """
-        feature_encoder_output, feature_encoder_output_lens = self.feature_encoder(
-            x, xlens
+        feature_encoder_output_maybe_masked, feature_encoder_output_lens = (
+            self.calc_feature_encoder_output(x, xlens)
         )
 
-        feature_encoder_output_maybe_masked = self.dropout_after_feature_enc(
-            feature_encoder_output
-        )
         if time_mask is not None:
             time_mask_3d = rearrange(time_mask, "b s -> b s 1")
             feature_encoder_output_maybe_masked = torch.where(

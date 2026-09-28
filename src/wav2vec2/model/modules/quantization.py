@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from einops import einsum, rearrange
+from einops import einsum, rearrange, reduce
 from torch import nn
 
 from wav2vec2.model.modules.schemas import (
@@ -29,29 +29,55 @@ class Wav2Vec2Quantization(nn.Module):
             config.concat_codebook_dim, config.quantization_out_dim
         )
 
-    def _lens_to_valid_mask(self, xlens: torch.Tensor, max_len: int) -> torch.Tensor:
+    @staticmethod
+    def _lens_to_valid_mask(xlens: torch.Tensor, max_len: int) -> torch.Tensor:
         positions = torch.arange(max_len, device=xlens.device)
         positions_2d = rearrange(positions, "s -> 1 s")
         xlens_2d = rearrange(xlens, "b -> b 1")
         return xlens_2d > positions_2d
 
-    def forward(self, x: torch.Tensor, xlens: torch.Tensor):
-        x = self.quantization_linear_in(x)
+    def _logits_group_by_codebook(self, x_logits: torch.Tensor) -> torch.Tensor:
+        return rearrange(x_logits, "b s (G V) -> b s G V", G=self.config.num_code_group)
 
-        x_logits_groupby = rearrange(
-            x, "b s (G V) -> b s G V", G=self.config.num_code_group
-        )
+    def _select_codebooks(self, x_logits: torch.Tensor) -> torch.Tensor:
+        x_logits_groupby = self._logits_group_by_codebook(x_logits)
         one_hot_x = F.gumbel_softmax(x_logits_groupby, hard=True, dim=-1)
+        return einsum(self.codebooks, one_hot_x, "G V d_G, b s G V -> b s G d_G")
 
-        codebooks_selected = einsum(
-            self.codebooks, one_hot_x, "G V d_G, b s G V -> b s G d_G"
-        )
-        codebooks_concat = rearrange(codebooks_selected, "b s G d_G -> b s (G d_G)")
+    def _calc_diversity_loss(
+        self, x_logits: torch.Tensor, xlens: torch.Tensor
+    ) -> torch.Tensor:
+        x_logits_groupby = self._logits_group_by_codebook(x_logits)
 
         # diversity loss
         x_prob_groupby = F.softmax(x_logits_groupby, dim=-1)
 
-        # todo: mask -> sum over b, s -> (G, V) -> sum p log p over V dim -> sum over G -> * 1/GV
-        # diversity_loss = ...
+        valid_mask = rearrange(
+            self._lens_to_valid_mask(xlens, max_len=x_prob_groupby.size(1)),
+            "b s -> b s 1 1",
+        ).to(torch.float)
 
-        return self.quantization_proj_out(codebooks_concat), xlens
+        x_prob_groupby_masked = x_prob_groupby * valid_mask
+
+        x_prob_g_v = (
+            reduce(x_prob_groupby_masked, "b s G V -> G V", "sum") / xlens.sum()
+        )
+
+        return reduce(torch.xlogy(x_prob_g_v, x_prob_g_v), "G V -> ", "mean")
+
+    def forward(
+        self, x: torch.Tensor, xlens: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        x_logits = self.quantization_linear_in(x)
+
+        # select codebooks with gumbel softmax
+        selected_codebooks = self._select_codebooks(x_logits)
+        selected_codebooks_concat = rearrange(
+            selected_codebooks, "b s G d_G -> b s (G d_G)"
+        )
+        out = self.quantization_proj_out(selected_codebooks_concat)
+
+        # calc diversity loss
+        diversity_loss = self._calc_diversity_loss(x_logits, xlens)
+
+        return out, xlens, diversity_loss
